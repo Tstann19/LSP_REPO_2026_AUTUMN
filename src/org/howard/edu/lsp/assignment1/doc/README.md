@@ -28,4 +28,4 @@
 10. Does scholarship status entitle a student to different grading, deadline, attendance, or course requirements? 
     - No, all students are held to the same standard regarding grading, deadlines, attendance and course requirements. 
 
-## I acknowledge that I have read the course syllabus and understand that I am responsible for complying with all course policies, assignment requirements, and monitoring Piazza throughout the semester.
+### I acknowledge that I have read the course syllabus and understand that I am responsible for complying with all course policies, assignment requirements, and monitoring Piazza throughout the semester.

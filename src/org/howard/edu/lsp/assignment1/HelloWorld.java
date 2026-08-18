@@ -1,6 +1,6 @@
 /**
- * Name: Trinity St Ann
- */
+* Name: Trinity St Ann
+*/
 
 package org.howard.edu.lsp.assignment1;
 
