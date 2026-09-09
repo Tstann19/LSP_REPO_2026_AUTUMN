@@ -29,19 +29,21 @@ public class ETLPipeline {
                     bw.write(line + ",GrossPay,PayLevel,EmploymentStatus");
                     bw.newLine();
                     isHeader = false;
-                    System.out.println(line + ",GrossPay,PayLevel,EmploymentStatus");
-                    System.out.println();
                     continue;
                 }
 
                 rowsRead++;
 
                 if (line.trim().isEmpty()) {
+                    rowsSkipped++;
                     continue; // Skip empty lines
                 }
 
                 String[] originalFields = line.split(",");
-                String[] fields = Arrays.copyOf(originalFields, originalFields.length + 3);
+                String[] fields = Arrays.copyOf(originalFields, 8);
+                fields[5] = ""; 
+                fields[6] = ""; 
+                fields[7] = ""; 
 
                 try {
                     normalizeStrings(fields);
@@ -54,13 +56,14 @@ public class ETLPipeline {
                     bw.write(String.join(",", fields));
                     bw.newLine();
                     rowsTransformed++;
-                    System.out.println(String.join(",", fields));
                 } catch (Exception e) {
                     rowsSkipped++;
                 }
             }
 
+            System.out.println();
             printSummary(rowsRead, rowsTransformed, rowsSkipped, outputFilePath);
+            System.out.println();
 
         } catch (IOException e) {
             System.err.println("Error processing the CSV file: " + e.getMessage());
@@ -76,7 +79,6 @@ public class ETLPipeline {
             fields[i] = fields[i].trim();
         }
         fields[1] = fields[1].toUpperCase();
-        //System.out.println(String.join(",", fields));
     }
 
     // Validate numeric values: EmployeeID must be an integer. 
@@ -106,12 +108,14 @@ public class ETLPipeline {
         }
 
         fields[5] = String.format("%.2f", grossPay);
+        fields[4] = String.format("%.2f", hourlyRate); 
+        fields[3] = String.format("%.2f", hoursWorked);
     }
 
     // Apply the IT bonus: If the trimmed Department is exactly "IT", add a 5% bonus to the pay calculated in Step 3. 
     // The bonus is applied after overtime.
     public static void applyITBonus(String[] fields){
-        String department = fields[2].trim();
+        String department = fields[2];
         if (department.equals("IT")) {
             double grossPay = Double.parseDouble(fields[5]);
             grossPay *= 1.05; // Apply 5% bonus
@@ -129,17 +133,16 @@ public class ETLPipeline {
     // Determine PayLevel: Using the final rounded GrossPay: < $500.00 → Low; 
     // $500.00–$999.99 → Standard; 
     // $1000.00–$1999.99 → High; >= $2000.00 → Executive.
-
     public static void determinePayLevel(String[] fields){
         double grossPay = Double.parseDouble(fields[5]);
         if (grossPay < 500.00) {
-            fields[7] = "Low";
+            fields[6] = "Low";
         } else if (grossPay < 1000.00) {
-            fields[7] = "Standard";
+            fields[6] = "Standard";
         } else if (grossPay < 2000.00) {
-            fields[7] = "High";
+            fields[6] = "High";
         } else {
-            fields[7] = "Executive";
+            fields[6] = "Executive";
         }
     }
 
@@ -147,16 +150,11 @@ public class ETLPipeline {
     public static void determineEmploymentStatus(String[] fields){
         double HoursWorked = Double.parseDouble(fields[3]);
         if (HoursWorked < 30.00) {
-            fields[6] = "Part-Time";
+            fields[7] = "Part-Time";
         } else {
-            fields[6] = "Full-Time";
+            fields[7] = "Full-Time";
         }
     }
-
-    /*
-    Important numeric rule: use the parsed HoursWorked and HourlyRate values for payroll calculations. Do not round HourlyRate before calculating GrossPay. 
-    Formatting HourlyRate to two decimal places is an output requirement only.
-    */
 
     //Print summary.
     public static void printSummary(int rowsRead, int rowsTransformed, int rowsSkipped, String outputFilePath) {
@@ -166,15 +164,3 @@ public class ETLPipeline {
         System.out.println("Output file path written: " + outputFilePath);
     }
 }
-
-/*
-Expected Output:
-EmployeeID,Name,Department,HoursWorked,HourlyRate,GrossPay,PayLevel,EmploymentStatus
-101,ALICE JOHNSON,HR,40.00,25.00,1000.00,High,Full-Time
-102,BOB SMITH,IT,45.00,30.00,1496.25,High,Full-Time
-107,EVAN LEE,Sales,20.00,18.50,370.00,Low,Part-Time
-108,FATIMA BROWN,IT,40.00,50.00,2100.00,Executive,Full-Time
-109,GEORGE WHITE,Finance,50.00,40.00,2200.00,Executive,Full-Time
-110,HELEN DAVIS,IT,30.00,80.00,2520.00,Executive,Full-Time
-113,KEVIN YOUNG,Marketing,30.00,16.67,499.98,Low,Full-Time
-*/
