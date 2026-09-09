@@ -1,10 +1,64 @@
 package org.howard.edu.lsp.assignment2;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+
+
 public class ETLPipeline {
-    // Implement the following methods as described in the assignment instructions.
+
     public static void main(String[] args) {
-        // This is the main method where you can call the other methods to test your implementation.
         String filepath = "data/employees.csv";
+        String outputFilePath = "data/transformed_employees.csv";
+        int rowsRead = 0;
+        int rowsTransformed = 0;
+        int rowsSkipped = 0;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filepath));
+            BufferedWriter bw = new BufferedWriter(new FileWriter(outputFilePath))) {
+
+            String line;
+            boolean isHeader = true;
+
+            while ((line = br.readLine()) != null) {
+                if (isHeader) {
+                    bw.write(line);
+                    bw.newLine();
+                    isHeader = false;
+                    continue;
+                }
+                
+                if (line.trim().isEmpty()) {
+                    continue; // Skip empty lines
+                }
+                rowsRead++;
+
+                String[] fields = line.split(",");
+
+                try {
+                    normalizeStrings(fields);
+                    validateValues(fields);
+                    calculateGrossPay(fields);
+                    applyITBonus(fields);
+                    roundGrossPay(fields);
+                    determinePayLevel(fields);
+                    determineEmploymentStatus(fields);
+
+                    bw.write(String.join(",", fields));
+                    bw.newLine();
+                    rowsTransformed++;
+                } catch (Exception e) {
+                    rowsSkipped++;
+                }
+            }
+
+            printSummary(rowsRead, rowsTransformed, rowsSkipped, outputFilePath);
+
+        } catch (IOException e) {
+            System.err.println("Error processing the CSV file: " + e.getMessage());
+        }
     }
 
 
