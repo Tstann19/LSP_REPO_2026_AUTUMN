@@ -9,27 +9,94 @@ import java.util.Arrays;
 
 public class Employee {
 
-    private int iD;
-    private String name;
-    private String department;
-    private double hoursWorked;
-    private double hourlyRate;
-    private String status;
+    int iD;
+    String name;
+    String department;
+    String hoursWorked;
+    String hourlyRate;
+    String grossPay;
+    String payLevel;
+    String status;
 
     public Employee(String[] oldFields) {
 
-        //Validate strings and values here before assigning to newFields
+        //Validate strings and values here before assigning to new fields
+        validate(oldFields);
 
+        //Assign validated values to the new fields
         this.iD = Integer.parseInt(oldFields[0]);
         this.name = oldFields[1];
         this.department = oldFields[2];
-        this.hoursWorked = Double.parseDouble(oldFields[3]);
-        this.hourlyRate = Double.parseDouble(oldFields[4]);
+        this.hoursWorked = String.format("%.2f", Double.parseDouble(oldFields[3]));
+        this.hourlyRate = String.format("%.2f", Double.parseDouble(oldFields[4]));
 
-        //Add two three new fields gross pay, pay level, and employee status.
-        //Add 3 new functions to calculate gross pay, pay level, and employee status.
+        //initialize them to empty strings for now, they will be calculated in the calculateSalary method.
+        this.grossPay = "";
+        this.payLevel = "";
+        this.status = "";
 
+        //Calculate salary and other fields based on the validated input
+        calculateSalary(oldFields);
+        this.grossPay = oldFields[5];
+        this.payLevel = oldFields[6];
+        this.status = oldFields[7];
+    }
 
+    public static void validate(String[] fields){
+        Integer.parseInt(fields[0]); // Validate EmployeeID
+        double hoursWorked = Double.parseDouble(fields[3]); // Validate HoursWorked
+        double hourlyRate = Double.parseDouble(fields[4]);
+
+        for (int i = 0; i < fields.length; i++) {
+            fields[i] = fields[i].trim();
+        }
+
+        fields[1] = fields[1].toUpperCase();
+
+        if (hoursWorked < 0 || hourlyRate < 0) {
+          throw new IllegalArgumentException();       
+        }
+    }
+
+    public static void calculateSalary(String[] fields){
+        double hoursWorked = Double.parseDouble(fields[3]);
+        double hourlyRate = Double.parseDouble(fields[4]);
+        String department = fields[2];
+        double grossPay;
+
+        //Calculate gross pay
+        if (hoursWorked <= 40.00) {
+            grossPay = hoursWorked * hourlyRate;
+        } else {
+            grossPay = 40.00 * hourlyRate + (hoursWorked - 40.00) * hourlyRate * 1.5;
+        }
+
+        //calculate IT bonus if applicable
+        if (department.equals("IT")) {
+            grossPay *= 1.05;
+            fields[5] = String.format("%.2f", grossPay);
+        }
+
+        //Calculate pay level
+        if (grossPay < 500.00) {
+            fields[6] = "Low";
+        } else if (grossPay < 1000.00) {
+            fields[6] = "Standard";
+        } else if (grossPay < 2000.00) {
+            fields[6] = "High";
+        } else {
+            fields[6] = "Executive";
+        }
+
+        //Calculate employee status
+        if (hoursWorked < 30.00) {
+            fields[7] = "Part-Time";
+        } else {
+            fields[7] = "Full-Time";
+        }
+
+        grossPay = Math.round(grossPay * 100.0) / 100.0; 
+        fields[5] = String.format("%.2f", grossPay);
     }
 
     public static void printSummary(int rowsRead, int rowsTransformed, int rowsSkipped, String outputFilePath) {
@@ -54,8 +121,9 @@ public class Employee {
 
             while ((line = br.readLine()) != null) {
 
+                //Writes header to the new file with the additional fields
                 if (isHeader) {
-                    bw.write(line + ",GrossPay,PayLevel,EmploymentStatus");
+                    bw.write(line);
                     bw.newLine();
                     isHeader = false;
                     continue;
@@ -63,28 +131,26 @@ public class Employee {
 
                 rowsRead++;
 
+                // Skips empty lines
                 if (line.trim().isEmpty()) {
                     rowsSkipped++;
-                    continue; // Skip empty lines
+                    continue; 
                 }
-
-                String[] originalFields = line.split(",");
-                String[] fields = Arrays.copyOf(originalFields, 8);
-                fields[5] = ""; 
-                fields[6] = ""; 
-                fields[7] = ""; 
 
                 try {
                     //write new employee object to the new file
-                    Employee employee = new Employee(fields);
-                    bw.write(String.join(",", fields));
-                    bw.newLine();
+                    //Employee employee = new Employee(fields);
+                    //bw.write(String.join(",", employee));
+                    //bw.newLine();
+                    Employee employee = new Employee(line.split(","));
+                    System.out.println("Employee object created: " + employee);
                     rowsTransformed++;
-                } catch (Exception e) {
+                } catch (NumberFormatException e) {
                     rowsSkipped++;
                 }
             }
 
+            //Prints summary to console.
             System.out.println();
             printSummary(rowsRead, rowsTransformed, rowsSkipped, outputFilePath);
             System.out.println();
