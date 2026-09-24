@@ -5,7 +5,6 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
 
 public class Employee {
 
@@ -30,19 +29,15 @@ public class Employee {
         this.hoursWorked = String.format("%.2f", Double.parseDouble(oldFields[3]));
         this.hourlyRate = String.format("%.2f", Double.parseDouble(oldFields[4]));
 
-        //initialize them to empty strings for now, they will be calculated in the calculateSalary method.
-        this.grossPay = "";
-        this.payLevel = "";
-        this.status = "";
-
         //Calculate salary and other fields based on the validated input
         calculateSalary(oldFields);
-        this.grossPay = oldFields[5];
-        this.payLevel = oldFields[6];
-        this.status = oldFields[7];
     }
 
     public static void validate(String[] fields){
+        if (fields.length != 5) {
+            throw new IllegalArgumentException("Invalid number of fields");
+        }
+
         Integer.parseInt(fields[0]); // Validate EmployeeID
         double hoursWorked = Double.parseDouble(fields[3]); // Validate HoursWorked
         double hourlyRate = Double.parseDouble(fields[4]);
@@ -58,7 +53,7 @@ public class Employee {
         }
     }
 
-    public static void calculateSalary(String[] fields){
+    public void calculateSalary(String[] fields){
         double hoursWorked = Double.parseDouble(fields[3]);
         double hourlyRate = Double.parseDouble(fields[4]);
         String department = fields[2];
@@ -74,29 +69,28 @@ public class Employee {
         //calculate IT bonus if applicable
         if (department.equals("IT")) {
             grossPay *= 1.05;
-            fields[5] = String.format("%.2f", grossPay);
         }
 
         //Calculate pay level
         if (grossPay < 500.00) {
-            fields[6] = "Low";
+            this.payLevel = "Low";
         } else if (grossPay < 1000.00) {
-            fields[6] = "Standard";
+            this.payLevel = "Standard";
         } else if (grossPay < 2000.00) {
-            fields[6] = "High";
+            this.payLevel = "High";
         } else {
-            fields[6] = "Executive";
+            this.payLevel = "Executive";
         }
 
         //Calculate employee status
         if (hoursWorked < 30.00) {
-            fields[7] = "Part-Time";
+            this.status = "Part-Time";
         } else {
-            fields[7] = "Full-Time";
+            this.status = "Full-Time";
         }
 
         grossPay = Math.round(grossPay * 100.0) / 100.0; 
-        fields[5] = String.format("%.2f", grossPay);
+        this.grossPay = String.format("%.2f", grossPay);
     }
 
     public static void printSummary(int rowsRead, int rowsTransformed, int rowsSkipped, String outputFilePath) {
@@ -106,6 +100,11 @@ public class Employee {
         System.out.println("Output file path written: " + outputFilePath);
     }
 
+    @Override
+    public String toString() {
+        return iD + "," + name + "," + department + "," + hoursWorked + ","
+         + hourlyRate + "," + grossPay + "," + payLevel + "," + status;
+    }
     public static void main(String[] args) {
         String filepath = "data/employees.csv";
         String outputFilePath = "data/transformed_employees.csv";
@@ -123,7 +122,7 @@ public class Employee {
 
                 //Writes header to the new file with the additional fields
                 if (isHeader) {
-                    bw.write(line);
+                    bw.write(line + ",GrossPay,PayLevel,EmploymentStatus");
                     bw.newLine();
                     isHeader = false;
                     continue;
@@ -137,15 +136,14 @@ public class Employee {
                     continue; 
                 }
 
+                //write new employee object to the new file
                 try {
-                    //write new employee object to the new file
-                    //Employee employee = new Employee(fields);
-                    //bw.write(String.join(",", employee));
-                    //bw.newLine();
                     Employee employee = new Employee(line.split(","));
-                    System.out.println("Employee object created: " + employee);
+                    System.out.println(employee);
+                    bw.write(employee.toString());
+                    bw.newLine();
                     rowsTransformed++;
-                } catch (NumberFormatException e) {
+                } catch (IllegalArgumentException e) {
                     rowsSkipped++;
                 }
             }
