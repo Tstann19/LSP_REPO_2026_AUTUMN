@@ -16,7 +16,7 @@
     - I believe my assignment #3 is definitely an improvement. The readability has definitely been improved upon.
     I can understand what exactly is being changed or defined along with making it easier to find specific functions despite the fact majority is of very similar code to the first one. Also since reading the CSV file and reformatting the CSV in the Employee.java separates their functionality has been more clear.
 
-## AI/Internet Disclosure 
+### AI/Internet Disclosure 
 
 Here's the link to the AI (Claude) transcript I used in the process of making my assignment #3:
 https://claude.ai/chat/bea9eabb-a7ab-42e4-bd4a-1620d3fc66be
